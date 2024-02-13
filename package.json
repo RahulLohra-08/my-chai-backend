@@ -2,10 +2,9 @@
   "name": "chai-backend",
   "version": "1.0.0",
   "description": "code with chai aur backend with hitesh sir",
-  "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "javascript",
@@ -13,8 +12,5 @@
     "chai"
   ],
   "author": "Rahul Lohra",
-  "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^3.0.3"
-  }
+  "license": "ISC"
 }
