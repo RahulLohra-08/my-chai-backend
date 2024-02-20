@@ -1,3 +1,5 @@
+//src folder ke andar jake backend ko run kare:  npm run dev
+
 // require('dotenv').config({path: "./env"}) // consistency ko karab kart hai hamare code ki
 import connectDB from "./db/index.js"
 import dotenv from "dotenv"
