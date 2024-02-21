@@ -60,7 +60,7 @@ userSchema.pre("save", async function (next) {
 
     //first time when we entered password: then we should encrypt the password.
 
-    this.password = bcrypt.hash(this.password, 10) // password decrypt here.
+    this.password = await bcrypt.hash(this.password, 10) // password decrypt here.
     next();
 } ) // jab password save hone wali ho usse just phale password lenge or usse encrypt karke store/save kara denge.
 
@@ -103,4 +103,6 @@ userSchema.methods.generateRefreshToken = function () {
 }
 
 
-export default User = mongoose.model("User", userSchema)
+const User = mongoose.model("User", userSchema)
+
+export default User;
