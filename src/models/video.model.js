@@ -8,15 +8,15 @@ const videoSchema = new Schema(
             required: true,
         },
         thumbnail: {
-            type: String, // cloudinary url
+            type: String, 
             required: true,
         },
         title: {
-            type: String, // cloudinary url
+            type: String, 
             required: true,
         },
         description: {
-            type: String, // cloudinary url
+            type: String,
             required: true,
         },
         duration: {
@@ -24,7 +24,7 @@ const videoSchema = new Schema(
             required: true,
         },
         views: {
-            type: Number, // cloudinary se duration nikalenge.
+            type: Number, 
             default: 0,
         },
         isPublished: {
@@ -40,7 +40,7 @@ const videoSchema = new Schema(
 
 //Hooks: 
 
-// step 2:-- aggregate pipelin
+// step 2:-- aggregate pipeline
 videoSchema.plugin(mongooseAggregatePaginate) // plugin ek trah ka hooks hai, jisse use karke chejo asan banya jata hia.
 
 export default Video = mongoose.model("Video", videoSchema)

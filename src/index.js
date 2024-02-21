@@ -2,9 +2,8 @@
 
 // require('dotenv').config({path: "./env"}) // consistency ko karab kart hai hamare code ki
 import connectDB from "./db/index.js"
+import { app } from './app.js'
 import dotenv from "dotenv"
-import express from 'express'
-const app = express();
 dotenv.config({   // isko hum experimental ke through hum isse aise use kar sakte hai. package.json me
     path: "./env"
 })

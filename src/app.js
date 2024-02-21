@@ -16,6 +16,14 @@ app.use(express.urlencoded({extended: true, limit: "16kb"})) // extended matlb o
 app.use(express.static("public"))  // public ye ek folder ka name hai.: static khuch nhi hota, kai baar hum file folder store karna chahte hai, jaise pdf aai ya image aai usse mai apne hi server me store karna chahta hun to ek public folder bana dete, khuch bhi assets hum isme store kar denge
 app.use(cookieParser())
 
+//import routes
+import userRouter from './routes/user.routes.js'
 
+
+//route declaration
+app.use("/api/v1/users", userRouter)  // sare indestiry gred me yahi use hoata hai: v1 means version 1;
+
+
+//http://localhost:8000/user/register
 
 export { app }
