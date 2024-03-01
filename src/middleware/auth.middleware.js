@@ -22,7 +22,7 @@ const jwtAuth = asyncHandler( async(req, _, next) => {  //yanha res ka use nhi h
             //NEXT VIDEO: discussion about frontend.
             throw new ApiError(401, "Invalid Access Token")
         }
-    
+
         //request ke andar hum  user add kar denge. 
     
         req.user = user;  //add user: Ab ye user globally use kar sakte hai janha kanhi bhi ye middleware use hoage req se user nikal sakte hai.

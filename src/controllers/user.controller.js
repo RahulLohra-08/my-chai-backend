@@ -37,7 +37,6 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-
 //---------------------------Register controller--------------------------------------------//
 const registerUser = asyncHandler(async (req, res) => {
     console.log("files =====> ", req.files)
