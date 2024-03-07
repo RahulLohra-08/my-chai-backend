@@ -3,6 +3,9 @@ import { ApiError } from '../utils/ApiError.js'
 import User  from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/CloudinaryService.js'
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt  from "jsonwebtoken";
+// Example Android verification using Google Play Developer API
+import { google } from 'googleapis';
 
 //Higher order function ke andar ek function call ho raha hai.
 
@@ -134,7 +137,9 @@ const loginUser = asyncHandler( async ( req, res) => {
 
     const { email, username, password } = req.body;
 
-    if (!eamil || !username) {
+    console.log("Body : ", req.body)
+
+    if (!(email || username)) {
         throw new ApiError(404, "username or email is required")
     }
 
@@ -180,30 +185,87 @@ const loginUser = asyncHandler( async ( req, res) => {
 
 //------------------------Logout controller--------------------------------------------------//
 const logoutUser = asyncHandler(async(req, res) => {
-    //findByIdAndUpdate method ka use kar rahe taki token sab khud se refresh na karna pade
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set: { // dollar set laga kar hum data ko update kar sakte hai, 
-                refreshToken: undefined, // logout hone per refreshToken undefined ho jaiga
+    try {
+        //findByIdAndUpdate method ka use kar rahe taki token sab khud se refresh na karna pade
+        await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: { // dollar set laga kar hum data ko update kar sakte hai, 
+                    refreshToken: undefined, // logout hone per refreshToken undefined ho jaiga
+                },
             },
-        },
-        {
-            new: true, // new value add kar dega 
+            {
+                new: true, // new value add kar dega 
+            }
+        )
+    
+         //send clear cookie
+         const options = {
+            httpOnly: true,  // frontend se modifiable nhi hoati keval cookie ko server se modified kar sakte hai isliye httpOnly: true or secure: true kia hia.
+            secure: true,
         }
-    )
-
-     //send clear cookie
-     const options = {
-        httpOnly: true,  // frontend se modifiable nhi hoati keval cookie ko server se modified kar sakte hai isliye httpOnly: true or secure: true kia hia.
-        secure: true,
+    
+        return res
+        .status(200)
+        .clearCookie("accessToken", options)   // clear cookie after logout
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged out"))
+    } catch (error) {
+        throw new ApiError(500, "Internal server error")
     }
+})
 
-    return res
-    .status(200)
-    .clearCookie("accessToken", options)   // clear cookie after logout
-    .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logged out"))
+
+//------------------------RefreshToken controller--------------------------------------------------//
+const refreshAccessToken = asyncHandler( async(req, res) => {
+
+   try {
+     const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken;
+ 
+     if (!incomingRefreshToken) {
+         throw new ApiError(401, "unauthorize refreshToken")
+     }
+ 
+     //decoded incoming refresh token and verify
+     const decoded = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+ 
+     // line 31 to 33 me refresh token ko save karya hai.
+     //database se refreshToken nikal lenge or match karenge. IncomingRefresh Token or data base ke refresh token ko. Same hua to refreshToken se user login rahega.
+     const user = await User.findById(decoded._id) //_id User model se aa raha janha se humne generatek kia hai.
+ 
+     if (!user) {
+         throw new ApiError(401, "Invalid refreshToken")
+     }
+     
+     if (incomingRefreshToken  !== user?.refreshToken) {
+         throw new ApiError(401, "RefreshToken is expired or used...!")
+     }
+     
+     //ab agar refresh token expired or used ho gaya hai, To hum ab new refreshToken or access token generate karenge
+ 
+     
+     const { accessToken, newRefreshToken } = await generateAccessAndRefreshToken(user._id)
+ 
+     const option = {
+         httpOnly: true,
+         secure: true
+     }
+ 
+     return res
+     .status(200)
+     .cookie("accessToken", accessToken, option)
+     .cookie("refreshToken", newRefreshToken, option)
+     .json(
+         new ApiResponse(
+             200,
+             accessToken,
+             newRefreshToken,
+             "Access Token Refreshed"
+         )
+     )
+   } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid Refresh Token")
+   }
 })
 
 //----------------------------------Change password controller--------------------------------------------------//
@@ -347,13 +409,43 @@ const updateUserCoverImage = asyncHandler ( async(req, res) => {
     )
 })
 
+const verifyPurchaseHistory = asyncHandler ( async(req, res) => {
+  const { productID, purchaseToken } = req.body;
+
+  try {
+    const auth = await google.auth.getClient({
+      scopes: ['https://www.googleapis.com/auth/androidpublisher.androidmarket.purchase'],
+    });
+
+    const service = google.androidpublisher({ version: 'v3', auth });
+
+    const response = await service.purchases.subscriptions.get({
+      packageName: 'com.kiddiekredit.app"', // Replace with your package name
+      subscriptionId: productID, // Replace with product ID
+      token: purchaseToken,
+    });
+
+    const isExpired = response.data.state === 'PURCHASED' && (
+      new Date(response.data.expiryTimeMillis) > new Date()
+    );
+
+    res.json({ isExpired });
+  } catch (error) {
+    console.error('Error verifying purchase:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 export { 
     registerUser,
     loginUser,
     logoutUser,
+    refreshAccessToken,
     changeCurrentPassword,
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    verifyPurchaseHistory,
 }

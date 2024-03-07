@@ -30,7 +30,7 @@ const userSchema = new Schema(
             required: true
         },
         coverImage: {
-            type: String, 
+            type: String,
         },
         watchHistory: [ // kisne dekha unka list ayeaga islia array me hai, 
             {
@@ -45,7 +45,7 @@ const userSchema = new Schema(
         refreshToken: {
             type: String
         },
-        
+
     }, { timestamps: true }
 )
 
@@ -62,20 +62,21 @@ userSchema.pre("save", async function (next) {
 
     this.password = await bcrypt.hash(this.password, 10) // password decrypt here.
     next();
-} ) // jab password save hone wali ho usse just phale password lenge or usse encrypt karke store/save kara denge.
+}) // jab password save hone wali ho usse just phale password lenge or usse encrypt karke store/save kara denge.
 
 
 //Methods:--
 //hum password ko check karenge upas bhejne se phale.
 //create custom method through userSchema.
 
-userSchema.methods.isPasswordCorrect = async function(password) {
+userSchema.methods.isPasswordCorrect = async function (password) {
     //compare password
     return bcrypt.compare(password, this.password) // jo database me store password or jo hum password input kia usse check karega.
 }
 
 userSchema.methods.generateAccessToken = function () {
-    jwt.sign(
+    // console.log('Generate Access function call here......')
+    return jwt.sign(
         { //1. ---------------payload----------------//
             _id: this._id, // ye id mongo database se ayegi
             email: this.email,
@@ -90,7 +91,9 @@ userSchema.methods.generateAccessToken = function () {
     )
 }
 userSchema.methods.generateRefreshToken = function () {
-    jwt.sign(
+    // console.log('Generate Refresh token function call here......')
+
+    return jwt.sign(
         { //1. ---------------payload----------------//
             _id: this._id, // refresh token me data kam hoti hai. qki token baar bar refresh hoti.
         },

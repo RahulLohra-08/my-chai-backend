@@ -7,14 +7,22 @@ import User from "../models/user.model.js";
 
 const jwtAuth = asyncHandler( async(req, _, next) => {  //yanha res ka use nhi ho raha hai isliye underscore laga denge: professional standard
     try {
-        const incomingRefreshToken =  req.cookie?.accessToken || req.header("Authorization").replace("Bearer ", "") // bearer space ko ek empty string me replace karke baki ka jo code hai use nikal lenge
+
+        console.log("token ===========> ", req.cookie?.accessToken);
+
+        const token =  req.cookie?.accessToken || req.header("Authorization")?.replace("Bearer ", "") // bearer space ko ek empty string me replace karke baki ka jo code hai use nikal lenge
     
-        if (!incomingRefreshToken) {
+        if (!token) {
             throw new ApiError(401, "Unauthorized request")
         }
+
+        console.log("incomingRefreshToken: ", token)
     
         //decode the token or verify the token 
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        console.log("decodedToken: ", decodedToken)
+
     
         const user = await User.findById(decodedToken?._id).select("-password -refreshToken")  //user.model me access token generate kar rahe hai to usme _id payload me de rahe vahi se udha rahe hai.
     
@@ -35,3 +43,6 @@ const jwtAuth = asyncHandler( async(req, _, next) => {  //yanha res ka use nhi h
 
 
 export default jwtAuth;
+
+
+// if you are not using try catch then select the code and direct write trycatch and hit enter automatically all code inside the try catch block. 

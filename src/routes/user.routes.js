@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, registerUser } from "../controllers/user.controller.js";
+import { loginUser, logoutUser, refreshAccessToken, registerUser, verifyPurchaseHistory } from "../controllers/user.controller.js";
 import upload from '../middleware/multer.middleware.js'
 import jwtAuth from "../middleware/auth.middleware.js";
 
@@ -21,9 +21,10 @@ router.route("/register").post(
 
 router.route("/login").post(loginUser)
 
+router.route("/verifyPurchase").post(verifyPurchaseHistory)
 
 //secured route: user logged in or not
-
-router.route("/logout").post(jwtAuth, loginUser)
+router.route("/logout").post(jwtAuth, logoutUser)
+router.route("/refresh-token").post(refreshAccessToken)
 
 export default router;
