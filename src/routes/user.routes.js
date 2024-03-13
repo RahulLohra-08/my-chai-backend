@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, logoutUser, refreshAccessToken, registerUser, verifyPurchaseHistory } from "../controllers/user.controller.js";
+import { getUserChannelProfile, loginUser, logoutUser, refreshAccessToken, registerUser, verifyPurchaseHistory } from "../controllers/user.controller.js";
 import upload from '../middleware/multer.middleware.js'
 import jwtAuth from "../middleware/auth.middleware.js";
 
@@ -20,6 +20,7 @@ router.route("/register").post(
 )
 
 router.route("/login").post(loginUser)
+router.route("/user-channel-profile/:username").get(getUserChannelProfile)
 
 router.route("/verifyPurchase").post(verifyPurchaseHistory)
 

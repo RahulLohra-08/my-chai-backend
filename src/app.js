@@ -20,9 +20,13 @@ app.use(cookieParser())
 import userRouter from './routes/user.routes.js'
 
 
+//health check
+app.get("/", (req, res) => {
+    res.send("<h5>Health check success</h5>")
+})
+
 //route declaration
 app.use("/api/v1/users", userRouter)  // sare indestiry gred me yahi use hoata hai: v1 means version 1;
-
 
 //http://localhost:8000/user/register
 

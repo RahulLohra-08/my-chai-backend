@@ -8,18 +8,18 @@ import User from "../models/user.model.js";
 const jwtAuth = asyncHandler( async(req, _, next) => {  //yanha res ka use nhi ho raha hai isliye underscore laga denge: professional standard
     try {
 
-        console.log("token ===========> ", req.cookie?.accessToken);
+        console.log("incomingCookies: ===========> ", req.cookies?.accessToken);
 
-        const token =  req.cookie?.accessToken || req.header("Authorization")?.replace("Bearer ", "") // bearer space ko ek empty string me replace karke baki ka jo code hai use nikal lenge
+        const incomingRefreshToken =  req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "") // bearer space ko ek empty string me replace karke baki ka jo code hai use nikal lenge
     
-        if (!token) {
+        if (!incomingRefreshToken) {
             throw new ApiError(401, "Unauthorized request")
         }
 
-        console.log("incomingRefreshToken: ", token)
+        console.log("incomingRefreshToken: ", incomingRefreshToken)
     
         //decode the token or verify the token 
-        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.ACCESS_TOKEN_SECRET);
 
         console.log("decodedToken: ", decodedToken)
 
