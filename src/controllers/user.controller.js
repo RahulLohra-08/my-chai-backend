@@ -312,7 +312,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
     const { fullName, email } = req.body;
 
-    if (!fullName || !email) {
+    if (!(fullName || email)) {
         throw new ApiError(404, "All Fields required")
     }
 
@@ -341,72 +341,81 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 //----------------------------------change avatar controller--------------------------------------------------//
 const updateUserAvatar = asyncHandler(async (req, res) => {
-    const avatarLocalPath = req.file?.path; // file: <----------file lia qki hume hi file chaiye
-
-    if (!avatarLocalPath) {
-        throw new ApiError(404, "Avatar file is missing")
-    }
-
-    //upload current avatar on cloudinary
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-
-    //check avatar url available or not
-    if (!avatar.url) {
-        throw new ApiError(404, "Error while uploading on avatar")
-    }
-
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: {
-                avatar: avatar.url,
-            }
-        },
-        {
-            new: true
+    try {
+        const avatarLocalPath = req.file?.path; // file: <----------file lia qki hume hi file chaiye
+    
+    
+        if (!avatarLocalPath) {
+            throw new ApiError(404, "Avatar file is missing")
         }
-    ).select("-password")
-
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(200, user, "Avatar updated successfully")
-        )
+    
+        //upload current avatar on cloudinary
+        const avatar = await uploadOnCloudinary(avatarLocalPath);
+    
+        //check avatar url available or not
+        if (!avatar.url) {
+            throw new ApiError(404, "Error while uploading on avatar")
+        }
+    
+        const user = await User.findByIdAndUpdate(
+            req.user?._id,
+            {
+                $set: {
+                    avatar: avatar.url,
+                }
+            },
+            {
+                new: true
+            }
+        ).select("-password")
+    
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, user, "Avatar updated successfully")
+            )
+    } catch (error) {
+        throw new ApiError(500, "Internal server error")
+    }
 })
 
 //----------------------------------change avatar controller--------------------------------------------------//
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-    const coverImageLocalPath = req.file?.path; // file: <----------file lia qki hume hi file chaiye
-
-    if (!coverImageLocalPath) {
-        throw new ApiError(404, "Cover Image file is missing")
-    }
-
-    //upload current avatar on cloudinary
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
-    //check avatar url available or not
-    if (!coverImage.url) {
-        throw new ApiError(404, "Error while uploading on coverImage")
-    }
-
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: {
-                coverImage: coverImage.url
-            }
-        },
-        {
-            new: true
+    try {
+        const coverImageLocalPath = req.file?.path; // file: <----------file lia qki hume hi file chaiye
+        
+        if (!coverImageLocalPath) {
+            throw new ApiError(404, "Cover Image file is missing")
         }
-    ).select("-password")
-
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(200, user, "Cover Image updated successfully")
-        )
+    
+        //upload current avatar on cloudinary
+        const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    
+        //check avatar url available or not
+        if (!coverImage.url) {
+            throw new ApiError(404, "Error while uploading on coverImage")
+        }
+    
+        const user = await User.findByIdAndUpdate(
+            req.user?._id,
+            {
+                $set: {
+                    coverImage: coverImage.url
+                }
+            },
+            {
+                new: true
+            }
+        ).select("-password")
+    
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, user, "Cover Image updated successfully")
+            )
+    } catch (error) {
+        throw new ApiError(500, "Internal server error")
+    }
 })
 
 //Using aggregation pipelin
@@ -414,140 +423,146 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
 
-    const { username } = req.params;
-
-    if (!username) {
-        throw new ApiError(401, "Username is missing")
-    }
-
-    //Aggregation pipe line array return karta hai: 
-    const channel = await User.aggregate([
-        { //1st pipeline: is document/user ke adhar per hum karenge lookup
-            $match: {
-                username: username?.toLowerCase(), // iss name ka jo bhi user hoga usse return kar dega.
-            }
-        },
-        {//lookup stage: For total Subsirbers// Mughe kitne logo ne subscribe kia hai,
-            $lookup: { // lookup ka use data ko merge/join "Left outer join" karne ke lia use karte hai.
-                from: "subscriptions", //kanha se lena hai usse modal ka name likhenge: Note: Modal me sari cheje lowercase me convert ho jati hai model ka name or last me "s" lag jata hai.
-                localField: "_id", //current moda, yani User modal ka _id<-------------means localField hai.
-                foreignField: "channel", //foreign key/foreignField, subscription modal ke chanel ko foriegn key banaye dia, isse hame total subscriber milenge.
-                as: "subscribers"// as using for name: Ye ek Field hai/coulmn name<---- is pure data subscriber name ke array me store ho jaiga. // Total subsriber mil jainge.
-            }
-        },
-        { // 2nd lookup for: Maine kitne logo ko subscribe kia hai,
-            $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "subscriber",
-                as: "subscribedTo"
-            }
-        },
-        { //AddFields: ye upper ki sari value ko to rakhega sath hi sath additional value bhi add kar dega isilye iss use karte hai. taki ek hi object me sara data bhej de.
-            $addFields: {
-                subscribersCount: { //Total subscriber kitne hai, uska count additionally add karenge.
-                    $size: "$subscribers"  //<------chunki subscriptions ek field hai jise hum upper liey hai isliye iske phale Dolar"$" ka sign lagaye hai. iss field ka total count return kar dega.
-                },
-                channelsSubscribedToCount: { //Total channel jise maine subscribe kia hai.
-                    $size: "$subscribedTo"
-                },
-                isSubscribed: { // condition me 3 me paramerter hote hai, janha condition likhte hai, or then janha true, or else false value likehte hia.
-                    $cond: { //in operator array or object dono ko calculate kar deta hai.: Agar app already logged in honge to req.user._id hoga.
-                        if: { $in: [req.user?._id, "$subscribers.subscriber"] }, // $subscribers ye ek field hai ilsiye iske andar jaya ja sakta hai.
-                        then: true,
-                        else: false
+    try {
+        const { username } = req.params;
+    
+        if (!username) {
+            throw new ApiError(401, "Username is missing")
+        }
+    
+        //Aggregation pipe line array return karta hai: 
+        const channel = await User.aggregate([
+            { //1st pipeline: is document/user ke adhar per hum karenge lookup
+                $match: {
+                    username: username?.toLowerCase(), // iss name ka jo bhi user hoga usse return kar dega.
+                }
+            },
+            {//lookup stage: For total Subsirbers// Mughe kitne logo ne subscribe kia hai,
+                $lookup: { // lookup ka use data ko merge/join "Left outer join" karne ke lia use karte hai.
+                    from: "subscriptions", //kanha se lena hai usse modal ka name likhenge: Note: Modal me sari cheje lowercase me convert ho jati hai model ka name or last me "s" lag jata hai.
+                    localField: "_id", //current moda, yani User modal ka _id<-------------means localField hai.
+                    foreignField: "channel", //foreign key/foreignField, subscription modal ke chanel ko foriegn key banaye dia, isse hame total subscriber milenge.
+                    as: "subscribers"// as using for name: Ye ek Field hai/coulmn name<---- is pure data subscriber name ke array me store ho jaiga. // Total subsriber mil jainge.
+                }
+            },
+            { // 2nd lookup for: Maine kitne logo ko subscribe kia hai,
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: "subscribedTo"
+                }
+            },
+            { //AddFields: ye upper ki sari value ko to rakhega sath hi sath additional value bhi add kar dega isilye iss use karte hai. taki ek hi object me sara data bhej de.
+                $addFields: {
+                    subscribersCount: { //Total subscriber kitne hai, uska count additionally add karenge.
+                        $size: "$subscribers"  //<------chunki subscriptions ek field hai jise hum upper liey hai isliye iske phale Dolar"$" ka sign lagaye hai. iss field ka total count return kar dega.
+                    },
+                    channelsSubscribedToCount: { //Total channel jise maine subscribe kia hai.
+                        $size: "$subscribedTo"
+                    },
+                    isSubscribed: { // condition me 3 me paramerter hote hai, janha condition likhte hai, or then janha true, or else false value likehte hia.
+                        $cond: { //in operator array or object dono ko calculate kar deta hai.: Agar app already logged in honge to req.user._id hoga.
+                            if: { $in: [req.user?._id, "$subscribers.subscriber"] }, // $subscribers ye ek field hai ilsiye iske andar jaya ja sakta hai.
+                            then: true,
+                            else: false
+                        }
                     }
                 }
+            },
+            {
+                $project: {  // ye basically selected value/data dene ke lia use karte hai, sari value nhi deta hai.
+                    fullName: 1, //<-----------1 means Flag: matlab isse add kar dijia
+                    username: 1,
+                    subscribersCount: 1,
+                    channelsSubscribedToCount: 1,
+                    isSubscribed: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    email: 1,
+                }
             }
-        },
-        {
-            $project:{  // ye basically selected value/data dene ke lia use karte hai, sari value nhi deta hai.
-                fullName: 1, //<-----------1 means Flag: matlab isse add kar dijia
-                username: 1,
-                subscribersCount: 1,
-                channelsSubscribedToCount: 1,
-                isSubscribed: 1,
-                avatar: 1,
-                coverImage: 1,
-                email: 1,
-            }
+        ])
+    
+        //aggregate array return karta hai.
+    
+        if (!channel?.length) {
+            throw new ApiError(401, "Channel does not exists")
         }
-    ])
-
-    //aggregate array return karta hai.
-    console.log("Channel data ================> ", channel)
-
-    if (!channel?.length) {
-        throw new ApiError(401, "Channel does not exists")
+    
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, channel[0], "User Channel Fetched successfully")
+            )
+    } catch (error) {
+        throw new ApiError(500, "Internal server error")
     }
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, channel[0], "User Channel Fetched successfully")
-    )
 })
 
 //----------------------------------Watch history controller--------------------------------------------------//
 //Sub pipe lines
 //Agregation pipe line me mongoose kaam nhi karti hai. mean vanha req.user._id <------------ye kaam nhi karegi iss hamhe convert karna padega objectId("") me.
 
-const getWatchHistory = asyncHandler( async (req, res) => {
+const getWatchHistory = asyncHandler(async (req, res) => {
     // req.user._id <--------------aisa karne se direct id mil jati hai sabhi me. But Note: agregate Pipe line id aise nhi milti hai, isse convert karna padta hai mongo db id me.
-
     //Agregate pipeline ek array return karta hai.
-    const user = await User.aggregate([
-        {   //id se user ko match karenge.
-            $match: { //agregate me moongoose kaam nhi karti hai Id convert karni padegi objectId me: Moongoose hame ye option deta hai objectId banne ka jisse new keyword se banya jata hai.
-                _id: new mongoose.Types.ObjectId(req.user._id), //yanha hamara document id match ho jaiga objectid ke sath me. 
-            }
-        },
-        {
-            $lookup:{
-                from: "videos", // join kar rahe hai. Video model se, databse ye videos name se save hota hai isliye small latter se staert or Last me "s" lagaye hai.
-                localField: "watchHistory",
-                foreignField: "_id",
-                as: "watchHistory",
-                pipeline: [  //1. sub pipe line <----------after above lookup ab humlog Video Modal me hai, ab video model ka jo owner hai usse user model se lookup karana hoaga.
-                    {
-                        $lookup: {
-                            from: "users", //ab issme user ki sari data aa jaigi, but hame sabhi field nhi chaiye hum khuch field chaiye, or vo bhi issi lookup me to further hum or ek pipe line lagayenge. selected field return karne ke lia.
-                            localField: "owner",
-                            foreignField: "_id",
-                            as: "owner",
-                            pipeline: [ //2. sub pipe line //owner field ke andar bus itne field honge. fullName, userName, or avatar.
-                                {
-                                    $project: {
-                                        fullName: 1,
-                                        username: 1,
-                                        avatar: 1,
+    try {
+        const user = await User.aggregate([
+            {   //id se user ko match karenge.
+                $match: { //agregate me moongoose kaam nhi karti hai Id convert karni padegi objectId me: Moongoose hame ye option deta hai objectId banne ka jisse new keyword se banya jata hai.
+                    _id: new mongoose.Types.ObjectId(req.user._id), //yanha hamara document id match ho jaiga objectid ke sath me. 
+                }
+            },
+            {
+                $lookup: {
+                    from: "videos", // join kar rahe hai. Video model se, databse ye videos name se save hota hai isliye small latter se staert or Last me "s" lagaye hai.
+                    localField: "watchHistory",
+                    foreignField: "_id",
+                    as: "watchHistory",
+                    pipeline: [  //1. sub pipe line <----------after above lookup ab humlog Video Modal me hai, ab video model ka jo owner hai usse user model se lookup karana hoaga.
+                        {
+                            $lookup: {
+                                from: "users", //ab issme user ki sari data aa jaigi, but hame sabhi field nhi chaiye hum khuch field chaiye, or vo bhi issi lookup me to further hum or ek pipe line lagayenge. selected field return karne ke lia.
+                                localField: "owner",
+                                foreignField: "_id",
+                                as: "owner",
+                                pipeline: [ //2. sub pipe line //owner field ke andar bus itne field honge. fullName, userName, or avatar.
+                                    {
+                                        $project: {
+                                            fullName: 1,
+                                            username: 1,
+                                            avatar: 1,
+                                        }
                                     }
+                                ]
+                            }
+                        },
+                        { //Frontend ke sahuliyat ke lia, usse loop run karke owner ki value return na karna pade isliye hum owner field ke data ko directly return kar denge.
+                            $addFields: {
+                                owner: { // khuch bhi name de sakte owner ki jagah me, hmne owner rakha hia.
+                                    $first: "$owner", // <-------- owner localField hai, Ab frontend developer directly owner ka data Dot laga kar access kar sakta hai.
+                                    //$first or ArrayElementAt: karke nikal sakte hai, Ye first value return kar dega.
                                 }
-                            ]
-                        }
-                    },
-                    { //Frontend ke sahuliyat ke lia, usse loop run karke owner ki value return na karna pade isliye hum owner field ke data ko directly return kar denge.
-                        $addFields: {
-                            owner: { // khuch bhi name de sakte owner ki jagah me, hmne owner rakha hia.
-                                $first: "$owner", // <-------- owner localField hai, Ab frontend developer directly owner ka data Dot laga kar access kar sakta hai.
-                                //$first or ArrayElementAt: karke nikal sakte hai, Ye first value return kar dega.
                             }
                         }
-                    }
-                ]
+                    ]
+                },
             },
-        },
-    ])
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            user[0].watchHistory,
-            "Watched history fetched successfully"
-        )
-    )
+        ])
+        
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    user[0].watchHistory,
+                    "Watched history fetched successfully"
+                )
+            )
+    } catch (error) {
+        throw new ApiError(500, "Internal server error")
+    }
 })
 
 const verifyPurchaseHistory = asyncHandler(async (req, res) => {

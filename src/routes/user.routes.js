@@ -29,10 +29,11 @@ router.route("/change-password").post(jwtAuth, changeCurrentPassword)
 router.route("/current-user").get(jwtAuth, getCurrentUser)
 router.route("/update-account").patch(jwtAuth, updateAccountDetails)
 // updateUserAvatar //File
-router.route("/avatar").patch(jwtAuth, upload.single("avatar"), updateUserAvatar)  //sd be login, multiple files nhi hai isliye single("avatar") ka use karenge
-router.route("/cover-image").patch(jwtAuth, upload.single("coverImage"), updateUserCoverImage)
+router.route("/update-avatar").patch(jwtAuth, upload.single("avatar"), updateUserAvatar)  //sd be login, multiple files nhi hai isliye single("avatar") ka use karenge
+router.route("/update-cover-image").patch(jwtAuth, upload.single("coverImage"), updateUserCoverImage)
 //params
 router.route("/user-channel-profile/:username").get(jwtAuth, getUserChannelProfile)
+//
 router.route("/watch-history").get(jwtAuth, getWatchHistory)
 router.route("/verifyPurchase").post(verifyPurchaseHistory)
 
