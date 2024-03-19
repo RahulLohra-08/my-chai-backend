@@ -21,13 +21,13 @@ const uploadOnCloudinary = async (localFilePath) => {
         console.log("Uploading file to Cloudinary...");
         
         // Generate timestamp for the signature
-        const timestamp = Math.floor(Date.now() / 1000);
+        // const timestamp = Math.floor(Date.now() / 1000);
 
         // Create the string to sign
-        const stringToSign = `timestamp=${timestamp}`;
+        // const stringToSign = `timestamp=${timestamp}`;
 
         // Generate the signature
-        const signature = cloudinary.utils.api_sign_request(stringToSign, process.env.CLOUDINARY_API_SECRET);
+        // const signature = cloudinary.utils.api_sign_request(stringToSign, process.env.CLOUDINARY_API_SECRET);
 
         // Upload file to Cloudinary with timestamp included in the signature
         const response = await cloudinary.uploader.upload(localFilePath, { 

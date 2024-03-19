@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"; //step 1: 
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"; //step 1: hamhe kitna video dena hai, or kanha se kanha tak dena ye decide karne ka kaam pagignate hoata h
 
 const videoSchema = new Schema( 
     {   
@@ -41,6 +41,8 @@ const videoSchema = new Schema(
 //Hooks: 
 
 // step 2:-- aggregate pipeline
-videoSchema.plugin(mongooseAggregatePaginate) // plugin ek trah ka hooks hai, jisse use karke chejo asan banya jata hia.
+    videoSchema.plugin(mongooseAggregatePaginate) // plugin ek trah ka hooks hai, jisse use karke chejo asan banya jata hia. ex: hum ek baar me user ko sara video nhi dena chahte, or khuch hi video dete or baad me jarurat ke time usse or video deta, isliye pagignate use karte hai. 
 
-export default Video = mongoose.model("Video", videoSchema)
+const Video = mongoose.model("Video", videoSchema)
+
+export default Video;
