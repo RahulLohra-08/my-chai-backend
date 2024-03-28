@@ -20,10 +20,12 @@ app.use(cookieParser())
 import router from './routes/healthcheck.route.js';
 import userRouter from './routes/user.routes.js'
 import videoRouter from './routes/video.routes.js'
+import tweetRouter from './routes/tweet.routes.js'
 
 
 //route declaration
 app.use("/api/v1/health-check", router)
+app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/users", userRouter)  // sare indestiry gred me yahi use hoata hai: v1 means version 1;
 app.use("/api/v1/videos", videoRouter)  
 //http://localhost:8000/user/register
