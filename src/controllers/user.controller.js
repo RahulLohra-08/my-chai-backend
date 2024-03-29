@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken";
 // Example Android verification using Google Play Developer API
 import { google } from 'googleapis';
 import mongoose from "mongoose";
-
 //Higher order function ke andar ek function call ho raha hai.
 
 // Validate email
@@ -79,9 +78,12 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with email or username already exists")
     }
 
-
+    //TypeError: Cannot read properties of undefined (reading '0')
+    console.log("filessssssssssssssssssssssss", req.files.avatar[0])
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // const coverImageLocalPath = req.files?.coverImage[0]?.path; // if file is empty send then its throw undefined ( reading 0 ) error:
+    
+    // console.log("filessssssssssssssssssssssss", req.files.coverImage[0])
 
     //for handling undefined ( reading 0 );
     let coverImageLocalPath;
@@ -189,9 +191,12 @@ const logoutUser = asyncHandler(async (req, res) => {
         await User.findByIdAndUpdate(
             req.user._id,
             {
-                $set: { // dollar set laga kar hum data ko update kar sakte hai, 
-                    refreshToken: undefined, // logout hone per refreshToken undefined ho jaiga
-                },
+                // $set: { // dollar set laga kar hum data ko update kar sakte hai, 
+                //     refreshToken: undefined, // logout hone per refreshToken undefined ho jaiga
+                // },
+                $unset: {
+                    refreshToken: 1, // 1 ye ek flag hai, matlab jo bhi field ko aap unset karna chahte hai usse field me 1 laga de.
+                }
             },
             {
                 new: true, // new value add kar dega 
@@ -343,20 +348,20 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 const updateUserAvatar = asyncHandler(async (req, res) => {
     try {
         const avatarLocalPath = req.file?.path; // file: <----------file lia qki hume hi file chaiye
-    
-    
+
+
         if (!avatarLocalPath) {
             throw new ApiError(404, "Avatar file is missing")
         }
-    
+
         //upload current avatar on cloudinary
         const avatar = await uploadOnCloudinary(avatarLocalPath);
-    
+
         //check avatar url available or not
         if (!avatar.url) {
             throw new ApiError(404, "Error while uploading on avatar")
         }
-    
+
         const user = await User.findByIdAndUpdate(
             req.user?._id,
             {
@@ -368,7 +373,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
                 new: true
             }
         ).select("-password")
-    
+
         return res
             .status(200)
             .json(
@@ -383,19 +388,19 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 const updateUserCoverImage = asyncHandler(async (req, res) => {
     try {
         const coverImageLocalPath = req.file?.path; // file: <----------file lia qki hume hi file chaiye
-        
+
         if (!coverImageLocalPath) {
             throw new ApiError(404, "Cover Image file is missing")
         }
-    
+
         //upload current avatar on cloudinary
         const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-    
+
         //check avatar url available or not
         if (!coverImage.url) {
             throw new ApiError(404, "Error while uploading on coverImage")
         }
-    
+
         const user = await User.findByIdAndUpdate(
             req.user?._id,
             {
@@ -407,7 +412,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
                 new: true
             }
         ).select("-password")
-    
+
         return res
             .status(200)
             .json(
@@ -425,11 +430,11 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
     try {
         const { username } = req.params;
-    
+
         if (!username) {
             throw new ApiError(401, "Username is missing")
         }
-    
+
         //Aggregation pipe line array return karta hai: 
         const channel = await User.aggregate([
             { //1st pipeline: is document/user ke adhar per hum karenge lookup
@@ -483,13 +488,13 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 }
             }
         ])
-    
+
         //aggregate array return karta hai.
-    
+
         if (!channel?.length) {
             throw new ApiError(401, "Channel does not exists")
         }
-    
+
         return res
             .status(200)
             .json(
@@ -550,7 +555,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 },
             },
         ])
-        
+
         return res
             .status(200)
             .json(
@@ -565,32 +570,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     }
 })
 
-const verifyPurchaseHistory = asyncHandler(async (req, res) => {
-    const { productID, purchaseToken } = req.body;
-
-    try {
-        const auth = await google.auth.getClient({
-            scopes: ['https://www.googleapis.com/auth/androidpublisher.androidmarket.purchase'],
-        });
-
-        const service = google.androidpublisher({ version: 'v3', auth });
-
-        const response = await service.purchases.subscriptions.get({
-            packageName: 'com.kiddiekredit.app"', // Replace with your package name
-            subscriptionId: productID, // Replace with product ID
-            token: purchaseToken,
-        });
-
-        const isExpired = response.data.state === 'PURCHASED' && (
-            new Date(response.data.expiryTimeMillis) > new Date()
-        );
-
-        res.json({ isExpired });
-    } catch (error) {
-        console.error('Error verifying purchase:', error);
-        res.status(500).send('Internal Server Error');
-    }
-});
 
 
 export {
@@ -605,5 +584,4 @@ export {
     updateUserCoverImage,
     getUserChannelProfile,
     getWatchHistory,
-    verifyPurchaseHistory,
 }

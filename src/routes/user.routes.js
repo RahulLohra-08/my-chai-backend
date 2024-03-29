@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeCurrentPassword, getCurrentUser, getUserChannelProfile, getWatchHistory, loginUser, logoutUser, refreshAccessToken, registerUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, verifyPurchaseHistory } from "../controllers/user.controller.js";
+import { changeCurrentPassword, getCurrentUser, getUserChannelProfile, getWatchHistory, loginUser, logoutUser, refreshAccessToken, registerUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage } from "../controllers/user.controller.js";
 import upload from '../middleware/multer.middleware.js'
 import jwtAuth from "../middleware/auth.middleware.js";
 
@@ -35,6 +35,5 @@ router.route("/update-cover-image").patch(jwtAuth, upload.single("coverImage"), 
 router.route("/user-channel-profile/:username").get(jwtAuth, getUserChannelProfile)
 //
 router.route("/watch-history").get(jwtAuth, getWatchHistory)
-router.route("/verifyPurchase").post(verifyPurchaseHistory)
 
 export default router;
