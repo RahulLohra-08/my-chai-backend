@@ -116,7 +116,8 @@ const deleteTweet = asyncHandler(async (req, res) => {
 
         res.json(new ApiResponse(200, deleteTweet, "Tweet deleted successfully"));
     } catch (error) {
-
+        console.log("Error: ", error.message)
+        throw new ApiResponse(500, "Internal Sever error")
     }
 })
 
