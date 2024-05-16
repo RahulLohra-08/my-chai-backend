@@ -17,11 +17,11 @@ app.use(express.static("public"))  // public ye ek folder ka name hai.: static k
 app.use(cookieParser())
 
 //import routes
-import router from './routes/healthcheck.route.js';
+import router from './routes/healthcheck.routes.js';
 import userRouter from './routes/user.routes.js'
 import videoRouter from './routes/video.routes.js'
 import tweetRouter from './routes/tweet.routes.js'
-import subscriptionRouter from './routes/subscription.route.js'
+import subscriptionRouter from './routes/subscription.routes.js'
 import commentRouter from './routes/comment.routes.js'
 import playlistRouter from './routes/playlist.routes.js'
 import likeRouter from './routes/like.routes.js'
